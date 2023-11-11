@@ -20,6 +20,15 @@ Se você entende um pouco de inglês, e quer ler a documentação oficial de ins
 - Baixe e instale <a href="https://code.visualstudio.com/download">Visual Studio Code</a>
 - Inicie o Visual Studio Code e vá para 'Extencions'. Procure por Go lang e baixe a sua extenção.
 
+### Instalação das depedencias
+
+Para isntalar as depedencias do codigo basta roda esse comando na raiz do projeto
+
+```bash
+go mod tidy
+```
+
+
 ### Comandos de teste
 
 O comando abaixo roda todos os arquivos teste do projeto.
