@@ -1,16 +1,16 @@
-package main
+package controllers
 
 import (
-	controllers "C214-teoria-GO/Controllers"
 	"C214-teoria-GO/database"
 	"C214-teoria-GO/models"
-	"io/ioutil"
+
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/assert/v2"
+	"github.com/go-playground/assert"
+	teste "github.com/stretchr/testify/assert"
 )
 
 var ID int
@@ -21,23 +21,24 @@ func SetupRotaTest() *gin.Engine {
 }
 
 func TestStatusCde(t *testing.T) {
+
 	r := SetupRotaTest()
-	r.GET("/nome", controllers.Saudacoes)
+	r.GET("/:nome", Saudacoes)
 	req, _ := http.NewRequest("GET", "/gui", nil)
 	resposta := httptest.NewRecorder()
 	r.ServeHTTP(resposta, req)
 
-	assert.Equal(t, http.StatusOK, resposta.Code, "Erro devia ser igual")
-	mockResposta := `{"API diz: ": "E ai gui, tudo beleza"}`
-	respostaBody, _ := ioutil.ReadAll(resposta.Body)
-	assert.Equal(t, mockResposta, respostaBody)
+	assert.Equal(t, http.StatusOK, resposta.Code)
+	mockResposta := `{"API diz: ": "E ai gui, tudo beleza?"}`
+	teste.JSONEq(t, mockResposta, resposta.Body.String())
 }
+
 func TestListaNdo(t *testing.T) {
 	database.Conecta_BD()
 	CriaAluno()
 	defer deleteAluno()
 	r := SetupRotaTest()
-	r.GET("/alunos", controllers.TodosAlunos)
+	r.GET("/alunos", TodosAlunos)
 	req, _ := http.NewRequest("GET", "/alunos", nil)
 	resposta := httptest.NewRecorder()
 	r.ServeHTTP(resposta, req)
@@ -61,7 +62,7 @@ func TestBuscaCpf(t *testing.T) {
 	CriaAluno()
 	defer deleteAluno()
 	r := SetupRotaTest()
-	r.GET("/alunos/cpf/:cpf", controllers.BuscaAlunoPorCPF)
+	r.GET("/alunos/cpf/:cpf", BuscaAlunoPorCPF)
 	req, _ := http.NewRequest("GET", "/alunos/cpf/12345678901", nil)
 	resposta := httptest.NewRecorder()
 	r.ServeHTTP(resposta, req)
