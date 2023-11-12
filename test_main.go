@@ -1,16 +1,16 @@
 package main
 
 import (
+	controllers "C214-teoria-GO/Controllers"
+	"C214-teoria-GO/database"
+	"C214-teoria-GO/models"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
-	"github.com/viniciusRibas/api-go-gin/controllers"
-	"github.com/viniciusRibas/api-go-gin/database"
-	"github.com/viniciusRibas/api-go-gin/models"
+	"github.com/go-playground/assert/v2"
 )
 
 var ID int
@@ -22,7 +22,7 @@ func SetupRotaTest() *gin.Engine {
 
 func TestStatusCde(t *testing.T) {
 	r := SetupRotaTest()
-	r.GET("/:nome", controllers.Saudacao)
+	r.GET("/nome", controllers.Saudacoes)
 	req, _ := http.NewRequest("GET", "/gui", nil)
 	resposta := httptest.NewRecorder()
 	r.ServeHTTP(resposta, req)
@@ -33,11 +33,11 @@ func TestStatusCde(t *testing.T) {
 	assert.Equal(t, mockResposta, respostaBody)
 }
 func TestListaNdo(t *testing.T) {
-	database.Conceta_BD()
+	database.Conecta_BD()
 	CriaAluno()
 	defer deleteAluno()
 	r := SetupRotaTest()
-	r.GET("/alunos", controllers.ExibeAlunos)
+	r.GET("/alunos", controllers.TodosAlunos)
 	req, _ := http.NewRequest("GET", "/alunos", nil)
 	resposta := httptest.NewRecorder()
 	r.ServeHTTP(resposta, req)
@@ -57,11 +57,11 @@ func deleteAluno() {
 }
 
 func TestBuscaCpf(t *testing.T) {
-	database.Conceta_BD()
+	database.Conecta_BD()
 	CriaAluno()
 	defer deleteAluno()
 	r := SetupRotaTest()
-	r.GET("/alunos/cpf/:cpf", controllers.BuscaCPF)
+	r.GET("/alunos/cpf/:cpf", controllers.BuscaAlunoPorCPF)
 	req, _ := http.NewRequest("GET", "/alunos/cpf/12345678901", nil)
 	resposta := httptest.NewRecorder()
 	r.ServeHTTP(resposta, req)

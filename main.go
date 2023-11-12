@@ -1,6 +1,11 @@
-package C214_Teoria_TesteUnitario
+package main
+
+import (
+	"C214-teoria-GO/database"
+	"C214-teoria-GO/routes"
+)
 
 func main() {
 	database.Conecta_BD()
-	routes.Handle()
+	routes.HandleRequest()
 }

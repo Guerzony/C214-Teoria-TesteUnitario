@@ -13,7 +13,7 @@ var (
 	err error
 )
 
-func Conceta_BD() {
+func Conecta_BD() {
 	sdc := "host=localhost user=root password=root dbname=root port=5432 sslmode=disable "
 	//String de conexao
 	DB, err = gorm.Open(postgres.Open(sdc))
