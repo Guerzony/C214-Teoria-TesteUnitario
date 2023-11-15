@@ -1,28 +1,44 @@
 package controllers
 
 import (
-	"C214-teoria-GO/database"
 	"net/http"
 
+	"C214-teoria-GO/database"
 	"C214-teoria-GO/models"
 
 	"github.com/gin-gonic/gin"
 )
 
-func TodosAlunos(c *gin.Context) {
+func bd() database.DBInterface {
+	return database.Conecta_BD()
+}
+
+func TodosAlunos(c *gin.Context)      { ExecutarHandler(c, TodosAlunosHandler) }
+func CriarNovoAluno(c *gin.Context)   { ExecutarHandler(c, CriarNovoAlunoHandler) }
+func BuscarAlunoPorID(c *gin.Context) { ExecutarHandler(c, BuscarAlunoPorIDHandler) }
+func DeletarAluno(c *gin.Context)     { ExecutarHandler(c, DeletarAlunoHandler) }
+func EditarAluno(c *gin.Context)      { ExecutarHandler(c, EditarAlunoHandler) }
+func BuscaAlunoPorCPF(c *gin.Context) { ExecutarHandler(c, BuscaAlunoPorCPFHandler) }
+func BuscaRG(c *gin.Context)          { ExecutarHandler(c, BuscaRGHandler) }
+
+func ExecutarHandler(c *gin.Context, handler func(c *gin.Context, db database.DBInterface)) {
+	handler(c, bd())
+}
+
+func TodosAlunosHandler(c *gin.Context, db database.DBInterface) {
 	var alunos []models.Aluno
-	database.DB.Find(&alunos)
-	c.JSON(200, alunos)
+	db.Find(&alunos)
+	c.JSON(http.StatusOK, alunos)
 }
 
 func Saudacoes(c *gin.Context) {
 	nome := c.Params.ByName("nome")
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"API diz: ": "E ai " + nome + ", tudo beleza?",
 	})
 }
 
-func CriarNovoAluno(c *gin.Context) {
+func CriarNovoAlunoHandler(c *gin.Context, db database.DBInterface) {
 	var aluno models.Aluno
 	err := c.ShouldBindJSON(&aluno)
 	if err != nil {
@@ -33,14 +49,14 @@ func CriarNovoAluno(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	database.DB.Create(&aluno)
+	db.Create(&aluno)
 	c.JSON(http.StatusOK, aluno)
 }
 
-func BuscarAlunoPorID(c *gin.Context) {
+func BuscarAlunoPorIDHandler(c *gin.Context, db database.DBInterface) {
 	var aluno models.Aluno
 	id := c.Params.ByName("id")
-	database.DB.First(&aluno, id)
+	db.First(&aluno, id)
 	c.JSON(http.StatusOK, aluno)
 	if aluno.ID == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"not found": "Aluno não encontrado"})
@@ -48,19 +64,19 @@ func BuscarAlunoPorID(c *gin.Context) {
 	}
 }
 
-func DeletarAluno(c *gin.Context) {
+func DeletarAlunoHandler(c *gin.Context, db database.DBInterface) {
 	var aluno models.Aluno
 	id := c.Params.ByName("id")
-	database.DB.Delete(&aluno, id)
+	db.Delete(&aluno, id)
 	c.JSON(http.StatusOK, gin.H{
 		"data": "Aluno deletado com sucesso",
 	})
 }
 
-func EditarAluno(c *gin.Context) {
+func EditarAlunoHandler(c *gin.Context, db database.DBInterface) {
 	var aluno models.Aluno
 	id := c.Params.ByName("id")
-	database.DB.First(&aluno, id)
+	db.First(&aluno, id)
 
 	err := c.ShouldBindJSON(&aluno)
 	if err != nil {
@@ -73,14 +89,14 @@ func EditarAluno(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	database.DB.Model(&aluno).UpdateColumns(aluno)
+	db.Model(&aluno).UpdateColumns(aluno)
 	c.JSON(http.StatusOK, aluno)
 }
 
-func BuscaAlunoPorCPF(c *gin.Context) {
+func BuscaAlunoPorCPFHandler(c *gin.Context, db database.DBInterface) {
 	var aluno models.Aluno
 	cpf := c.Param("cpf")
-	database.DB.Where(&models.Aluno{CPF: cpf}).First(&aluno)
+	db.Where(&models.Aluno{CPF: cpf}).First(&aluno)
 
 	if aluno.ID == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"not found": "Aluno não encontrado"})
@@ -89,10 +105,10 @@ func BuscaAlunoPorCPF(c *gin.Context) {
 	c.JSON(http.StatusOK, aluno)
 }
 
-func BuscaRG(c *gin.Context) {
+func BuscaRGHandler(c *gin.Context, db database.DBInterface) {
 	var aluno models.Aluno
 	rg := c.Param("rg")
-	database.DB.Where(&models.Aluno{RG: rg}).First(&aluno)
+	db.Where(&models.Aluno{RG: rg}).First(&aluno)
 
 	if aluno.ID == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"not found": "Aluno não encontrado"})
