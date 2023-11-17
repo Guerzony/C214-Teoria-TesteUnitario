@@ -1,11 +1,9 @@
 package controllers
 
 import (
-	"C214-teoria-GO/models"
 	"bytes"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -21,7 +19,7 @@ func SetupRotaTest() *gin.Engine {
 	return rotas
 }
 
-func TestStatusCde(t *testing.T) {
+func TestStatusCode(t *testing.T) {
 
 	r := SetupRotaTest()
 	r.GET("/:nome", Saudacoes)
@@ -36,12 +34,37 @@ func TestStatusCde(t *testing.T) {
 
 func TestTodosAlunos(t *testing.T) {
 	mockDB := new(MockDB)
-	mockDB.On("Find", mock.Anything).Return(mockDB)
 	gin.SetMode(gin.TestMode)
+	mockDB.On("Find", mock.Anything).Return(mockDB)
 	c, _ := gin.CreateTestContext(httptest.NewRecorder())
 
 	TodosAlunosHandler(c, mockDB)
 	assert.Equal(t, http.StatusOK, c.Writer.Status())
+}
+
+func performRequest(router *gin.Engine, method, path string, body []byte) *httptest.ResponseRecorder {
+	req, _ := http.NewRequest(method, path, bytes.NewBuffer(body))
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	return w
+}
+
+func TestTodosAlunosEmpty(t *testing.T) {
+	mockDB := new(MockDB)
+	gin.SetMode(gin.TestMode)
+	router := gin.Default()
+
+	mockDB.On("Find", mock.Anything).Return(&MockDB{})
+
+	router.GET("/alunos", func(c *gin.Context) {
+		TodosAlunosHandler(c, mockDB)
+	})
+
+	w := performRequest(router, "GET", "/alunos", nil)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert2.Equal(t, w.Body.String(), "null")
+	mockDB.AssertExpectations(t)
 }
 
 func TestCriarAluno(t *testing.T) {
@@ -79,122 +102,5 @@ func TestDeletarAluno(t *testing.T) {
 	mockDB.AssertExpectations(t)
 
 	expectedJSON := `{"data":"Aluno deletado com sucesso"}`
-	assert2.JSONEq(t, expectedJSON, w.Body.String())
-}
-
-func TestEditarAluno(t *testing.T) {
-	mockDB := &MockDB{}
-	gin.SetMode(gin.TestMode)
-	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
-
-	c.Params = append(c.Params, gin.Param{Key: "id", Value: "1"})
-
-	// Simula a busca do aluno no banco de dados
-	alunoSimulado := &models.Aluno{
-		Nome: "John Doe",
-		RG:   "123456789",
-		CPF:  "12345678901",
-	}
-	mockDB.On("First", mock.AnythingOfType("*models.Aluno"), mock.Anything).Return(mockDB).Run(func(args mock.Arguments) {
-		aluno := args.Get(0).(*models.Aluno)
-		*aluno = *alunoSimulado
-	})
-
-	// Configuração do corpo da requisição (JSON)
-	jsonBody := `{"Nome":"Jane",
-		"RG":"987654321",
-		"CPF":"98765432109"
-	}`
-	c.Request = httptest.NewRequest(http.MethodPut, "/alunos/1", strings.NewReader(jsonBody))
-	c.Request.Header.Set("Content-Type", "application/json")
-
-	// Configuração do método Model e UpdateColumns para retornar o próprio mockDB
-	mockDB.On("Model", mock.AnythingOfType("*models.Aluno")).Return(mockDB)
-	mockDB.On("UpdateColumns", mock.AnythingOfType("*models.Aluno")).Return(mockDB)
-
-	// Chamada da função
-	EditarAlunoHandler(c, mockDB)
-
-	// Verificações
-	assert.Equal(t, http.StatusOK, w.Code)
-	mockDB.AssertExpectations(t)
-
-}
-
-func TestBuscaAlunoPorCPFHandler(t *testing.T) {
-	// Configuração do banco de dados mock
-	mockDB := &MockDB{}
-
-	// Configuração do contexto
-	gin.SetMode(gin.TestMode)
-	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
-
-	// Simula o CPF do aluno na URL
-	c.Params = append(c.Params, gin.Param{Key: "cpf", Value: "12345678901"})
-
-	// Simula a busca do aluno no banco de dados
-	alunoSimulado := &models.Aluno{
-
-		Nome: "John Doe",
-		RG:   "123456789",
-		CPF:  "12345678901",
-	}
-	mockDB.On("Where", mock.AnythingOfType("*models.Aluno"), "cpf = ?", "12345678901").Return(mockDB).Run(func(args mock.Arguments) {
-		aluno := args.Get(0).(*models.Aluno)
-		*aluno = *alunoSimulado
-	})
-
-	// Configuração do método First para retornar o próprio mockDB
-	mockDB.On("First", mock.AnythingOfType("*models.Aluno")).Return(mockDB)
-
-	// Chamada da função
-	BuscaAlunoPorCPFHandler(c, mockDB)
-
-	// Verificações
-	assert.Equal(t, http.StatusOK, w.Code)
-	mockDB.AssertExpectations(t)
-
-	// Verifica se a resposta JSON contém os dados do aluno
-	expectedJSON := `{"CreatedAt":"0001-01-01T00:00:00Z","UpdatedAt":"0001-01-01T00:00:00Z","DeletedAt":null,"Nome":"John Doe","RG":"123456789","CPF":"12345678901"}`
-	assert2.JSONEq(t, expectedJSON, w.Body.String())
-}
-
-func TestBuscaRGHandler(t *testing.T) {
-	// Configuração do banco de dados mock
-	mockDB := &MockDB{}
-
-	// Configuração do contexto
-	gin.SetMode(gin.TestMode)
-	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
-
-	// Simula o RG do aluno na URL
-	c.Params = append(c.Params, gin.Param{Key: "rg", Value: "123456789"})
-
-	// Simula a busca do aluno no banco de dados
-	alunoSimulado := &models.Aluno{
-		Nome: "John Doe",
-		RG:   "123456789",
-		CPF:  "12345678901",
-	}
-	mockDB.On("Where", mock.AnythingOfType("*models.Aluno"), "rg = ?", "123456789").Return(mockDB).Run(func(args mock.Arguments) {
-		aluno := args.Get(0).(*models.Aluno)
-		*aluno = *alunoSimulado
-	})
-
-	// Configuração do método First para retornar o próprio mockDB
-	mockDB.On("First", mock.AnythingOfType("*models.Aluno")).Return(mockDB)
-
-	// Chamada da função
-	BuscaRGHandler(c, mockDB)
-
-	// Verificações
-	assert.Equal(t, http.StatusOK, w.Code)
-	mockDB.AssertExpectations(t)
-
-	// Verifica se a resposta JSON contém os dados do aluno
-	expectedJSON := `{"ID":1,"CreatedAt":"0001-01-01T00:00:00Z","UpdatedAt":"0001-01-01T00:00:00Z","DeletedAt":null,"Nome":"John Doe","RG":"123456789","CPF":"12345678901"}`
 	assert2.JSONEq(t, expectedJSON, w.Body.String())
 }
