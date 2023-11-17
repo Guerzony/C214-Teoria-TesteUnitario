@@ -1,0 +1,37 @@
+name: CI/CD Go
+
+on:
+  push:
+    branches:
+      - main
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps: 
+    - name: Checkout do Codigo
+      uses: actions/checout@v2      
+
+    - name: Configurar o Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17
+
+    - name: Atualizando Dependencias
+      run: go mod tidy  
+
+    - name: Testes
+      run: go test ./...   
+
+    - name: build
+      run: go build
+
+    - name: Docker Compose    
+      run: |
+      sudo apt-get isntall -y docker-compose
+      docker-compose up -d
+
+    - name: Rodando o Codigo
+      run: ./C214-teoria-GO
