@@ -6,8 +6,9 @@ on:
       - main
 
 
-jobs:
+jobs:    
   build:
+    name: Build
     runs-on: ubuntu-latest
 
     steps: 
@@ -19,8 +20,22 @@ jobs:
       with:
         go-version: '1.18'
 
-    - name: build
+    - name: build instala dependencias e gera executavel
       run: go build -v ./...
+  
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps: 
+    - name: Checkout do Codigo
+      uses: actions/checkout@v2   
+
+    - name: Configurar o Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: '1.18'
 
     - name: Testes
       run: go test -v ./...   
